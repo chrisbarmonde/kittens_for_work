@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Kittens For Work Options!</title>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+
+	<script type="text/javascript" src="src/class.js"></script>
+	<script type="text/javascript" src="src/options.js"></script>
+
+	<script type="text/javascript">
+
+		var options = new Options();
+
+		function loadOptions() {
+			$('input[name="mode"][value="' + options.mode() + '"]').attr('checked', 'checked');
+		}
+
+		function saveOptions() {
+			options.save($('input[name="mode"]:checked').val());
+		}
+
+		function show(name) {
+			return;
+			var hide = (name == 'whitelist') ? 'blacklist' : 'whitelist';
+			$('#' + name).show();
+			$('#' + hide).hide();
+		}
+
+		function add(name) {
+			var ul = $('#' + name);
+			ul.append('<li><input type="text" /></li>');
+		}
+
+		$(function() {loadOptions();});
+	</script>
+</head>
+<body>
+
+<strong>How should KFW work?</strong>
+<label><input type="radio" name="mode" value="w" onclick="show('whitelist');" /> Whitelist</label>
+<ul id="whitelist" style="display:none;"><li><a href="javascript:add('whitelist')">+ Add</a></li></ul>
+
+<label><input type="radio" name="mode" value="b" onclick="show('blacklist');" /> Blacklist</label>
+<ul id="blacklist" style="display:none;"><li><a href="javascript:add('blacklist')">+ Add</a></li></ul>
+
+<button onclick="saveOptions();">Save</button>
+</body>
+</html>
