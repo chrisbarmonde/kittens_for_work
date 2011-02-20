@@ -2,7 +2,13 @@
 <html>
 	<head>
 		<script src="src/class.js" type="text/javascript"></script>
+		<script src="src/options.js" type="text/javascript"></script>
+
+		<script src="src/tab.js" type="text/javascript"></script>
+		<script src="src/nudejs/worker.nude.js" type="text/javascript"></script>
+
 		<script type="text/javascript">
+
 			// From Prototype.js, modified slightly
 			Function.prototype.bind = function(context)
 			{
@@ -14,99 +20,61 @@
 					}
 			}
 			
+			var tabs = {},
+				options = new Options(),
+				nudejs = new NudeChecker();
 
-			var Tab = Class.extend({
-				init: function(id)
-				{
-					this.id = id;
-					this.port = null;
 
-					this.enabled = false;
+			var canvas = document.createElement("canvas");
+//			var b = document.getElementsByTagName("body")[0];
+//			b.appendChild(canvas);
+			var ctx = canvas.getContext("2d");
 
-					this.original_images = [];
-				},
+//			chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+//				// Remove old tab
+//				if (tabs[tabId])
+//				{
+//					tabs[tabId].destroy();
+//					delete tabs[tabId];
+//				}
+//
+//				if (options.checkUrl(tab.url))
+//				{
+//					chrome.pageAction.show(tabId);
+//					tabs[tabId] = new Tab(tabId);
+//				}
+//			});
+//
+//			chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
+//				if (tabs[tabId])
+//				{
+//					tabs[tabId].destroy();
+//					delete tabs[tabId];
+//				}
+//			});
 
-				enable: function()
-				{
-					this.enabled = true;
+			chrome.extension.onConnect.addListener(function(port) {
+				console.assert(port.name == "kfw");
+				console.log("Connecting to page!");
 
-					if (this.port == null)
-					{
-						console.log("Creating port for tab " + this.id);
+				port.onMessage.addListener(function(msg) {
+					if ('img' in msg) {
+						console.log("Checking " + msg.img.src);
+						// apply the width and height to the canvas element
+						canvas.width = msg.img.width;
+						canvas.height = msg.img.height;
+						// draw the image into the canvas element
+						ctx.drawImage(msg.img, 0, 0);
 
-						chrome.tabs.executeScript(
-							this.id,
-							{file: "src/content_script.js"},
-							function() {
-								this.port = chrome.tabs.connect(this.id, {name: "kfw"});
-								this.port.onMessage.addListener(function(msg) {
-									console.log("Received message");
-									console.log(msg);
-									if ('original_images' in msg) {
-										this.original_images = msg.original_images;
-										this.replaceImages();
-									}
-								}.bind(this));
-
-								console.log(this.port);
-							}.bind(this)
+						var result = nudejs.scanImage(
+							ctx.getImageData(0, 0, canvas.width, canvas.height).data,
+							canvas.width,
+							canvas.height
 						);
-
+						console.log("Result for " + msg.img.src + ": " + result);
+						port.postMessage({img: msg.img,  result: result});
 					}
-					else
-					{
-						console.log("Replacing images.");
-						this.replaceImages();
-					}
-				},
-
-				disable: function()
-				{
-					console.log("Resetting images");
-
-					this.enabled = false;
-					this.port.postMessage({images: this.original_images});
-				},
-
-				replaceImages: function()
-				{
-					var images = [];
-					for (var i = 0; i < this.original_images.length; i++) {
-						images.push('http://somehow-someday.com/images/lol.png');
-					}
-					
-					this.port.postMessage({images: images});
-				},
-
-				destroy: function()
-				{
-					this.original_images = null;
-					this.port = null; // .disconnect()?
-				}
-			})
-
-			var tabs = {};
-
-			chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-				// Remove old tab
-				if (tabs[tabId])
-				{
-					tabs[tabId].destroy();
-					delete tabs[tabId];
-				}
-
-				if (tab.url.indexOf('formspring') > -1)
-				{
-					chrome.pageAction.show(tabId);
-					tabs[tabId] = new Tab(tabId);
-				}
-			});
-			chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
-				if (tabs[tabId])
-				{
-					tabs[tabId].destroy();
-					delete tabs[tabId];
-				}
+				});
 			});
 
 			chrome.pageAction.onClicked.addListener(function(tab) {
