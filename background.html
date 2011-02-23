@@ -5,7 +5,9 @@
 		<script src="src/options.js" type="text/javascript"></script>
 
 		<script src="src/tab.js" type="text/javascript"></script>
+		<script src="src/jquery.min.js" type="text/javascript"></script>
 		<script src="src/nudejs/worker.nude.js" type="text/javascript"></script>
+		<script src="src/content_script.js" type="text/javascript"></script>
 
 		<script type="text/javascript">
 
@@ -22,13 +24,11 @@
 			
 			var tabs = {},
 				options = new Options(),
-				nudejs = new NudeChecker();
+				cs = new ContentScript(false);
 
 
-			var canvas = document.createElement("canvas");
-//			var b = document.getElementsByTagName("body")[0];
-//			b.appendChild(canvas);
-			var ctx = canvas.getContext("2d");
+			// document.ready
+			$(function() { cs.injectCanvas() });
 
 //			chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 //				// Remove old tab
@@ -58,21 +58,61 @@
 				console.log("Connecting to page!");
 
 				port.onMessage.addListener(function(msg) {
-					if ('img' in msg) {
-						console.log("Checking " + msg.img.src);
-						// apply the width and height to the canvas element
-						canvas.width = msg.img.width;
-						canvas.height = msg.img.height;
-						// draw the image into the canvas element
-						ctx.drawImage(msg.img, 0, 0);
+					if ('scan' in msg) {
+						var img = msg.scan;
+						
+						console.log("Checking " + img.src);
 
-						var result = nudejs.scanImage(
-							ctx.getImageData(0, 0, canvas.width, canvas.height).data,
-							canvas.width,
-							canvas.height
-						);
-						console.log("Result for " + msg.img.src + ": " + result);
-						port.postMessage({img: msg.img,  result: result});
+						var nimg = document.createElement('img');
+						nimg.src = img.src;
+						nimg.onload = function() {
+							nimg.width = img.width;
+							nimg.height = img.height;
+							document.body.appendChild(nimg);
+							log(nimg);
+
+							var result = cs.scanImage(nimg);
+							port.postMessage({scan_result: {id: img.id,  result: result}});
+
+							document.body.removeChild(nimg);
+							delete nimg;
+						}
+//						$.ajax(
+//							'http://img-to-json.appspot.com/',
+//							{
+//								timeout: 10000,
+//								data: {url: img.src},
+//								dataType: 'json',
+//								// Remove the '(' and ')' from the JSONP request
+//								dataFilter: function(data, type) {
+//									return data.substring(1, data.length-2);
+//								},
+//								error: function(jqXHR, textStatus, errorThrown) {
+//									console.log('ERROR: ' + textStatus);
+//									console.log(errorThrown);
+//								},
+//								success: function(data) {
+//									console.log("Cross-domain success for " + img.src);
+//									if (data.data)
+//									{
+//										console.log("Data exists too, yay");
+//										var result = false;
+//										var nimg = new Image();
+//										nimg.src = data.src;
+//										//nimg.onload = function() {
+//										//console.log("Image finished loading.");
+//										nimg.width = img.width;
+//										nimg.height = img.height;
+//
+//										result = cs.scanImage(nimg);
+//										console.log("Result is " + result);
+//										port.postMessage({scan_result: {id: img.id,  result: result}});
+//										//};
+//
+//									}
+//								}
+//							}
+//						);
 					}
 				});
 			});
@@ -89,4 +129,6 @@
 			});
 		</script>
 	</head>
+	<body>
+	</body>
 </html>

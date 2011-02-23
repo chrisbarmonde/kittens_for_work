@@ -1,6 +1,11 @@
-var NudeChecker = function() {};
-NudeChecker.prototype = {
+Array.prototype.remove = function (a)
+{
+	var b = this.slice(a + 1);
+	this.length = a;
+	return this.push.apply(this, b)
+};
 
+var NudeChecker = Class.extend({
 	reset: function() {
 		this.skinRegions = [];
 		this.skinMap = [];
@@ -317,4 +322,4 @@ NudeChecker.prototype = {
 		var sum = r+g+b;
 		return [(r/sum), (g/sum), (b/sum)];
 	}
-};
+});

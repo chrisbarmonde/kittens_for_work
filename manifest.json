@@ -5,21 +5,21 @@
 
 	"default_locale": "en",
 	"icons": {
-		"16": "images/16x16.png",
-		"48": "images/48x48.png",
-		"128": "images/128x128.png"
+		"16": "images/16x16.ico",
+		"48": "images/48x48.jpg",
+		"128": "images/128x128.jpg"
 	},
 
 	"background_page": "background.html",
 	"page_action": {
-		"default_icon": "images/16x16.png",
+		"default_icon": "images/16x16.ico",
 		"default_title": "Kittens For Work!"
 //		"default_popup": "page_action.html"
 	},
 	"content_scripts": [{
 		"run_at": "document_start",
 		"all_frames": true,
-		"js": ["src/content_script.js"],
+		"js": ["src/class.js", "src/nudejs/worker.nude.js", "src/content_script.js", "src/run.js"],
 		"matches": [ "http://*/*", "https://*/*" ]
 	}],
 
