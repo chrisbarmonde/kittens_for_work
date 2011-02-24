@@ -2,48 +2,46 @@
 <html>
 	<head>
 		<script src="src/class.js" type="text/javascript"></script>
-		<script src="src/options.js" type="text/javascript"></script>
+		<script src="src/util.js" type="text/javascript"></script>
 
+		<script src="src/options.js" type="text/javascript"></script>
 		<script src="src/tab.js" type="text/javascript"></script>
+
 		<script src="src/jquery.min.js" type="text/javascript"></script>
 		<script src="src/nudejs/worker.nude.js" type="text/javascript"></script>
-		<script src="src/content_script.js" type="text/javascript"></script>
+		<script src="src/scanner.js" type="text/javascript"></script>
+		<script src="src/flickr.js" type="text/javascript"></script>
 
 		<script type="text/javascript">
-
-			// From Prototype.js, modified slightly
-			Function.prototype.bind = function(context)
-			{
-					if (arguments.length < 2 && typeof arguments[0] === "undefined") return this;
-					var __method = this, args = Array.prototype.slice.call(arguments).slice(1);
-					return function() {
-							var a = args.concat(Array.prototype.slice.call(arguments));
-							return __method.apply(context, a);
-					}
-			}
 			
 			var tabs = {},
 				options = new Options(),
-				cs = new ContentScript(false);
+				scanner = new Scanner(),
+				flickr = new Flickr();
 
-
+			flickr.getPhotos();
+			
 			// document.ready
-			$(function() { cs.injectCanvas() });
+			$(function() {
+				scanner.injectCanvas()
+			});
 
-//			chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-//				// Remove old tab
+
+			chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+				chrome.pageAction.show(tabId);
+				// Remove old tab
 //				if (tabs[tabId])
 //				{
 //					tabs[tabId].destroy();
 //					delete tabs[tabId];
 //				}
-//
+
 //				if (options.checkUrl(tab.url))
 //				{
-//					chrome.pageAction.show(tabId);
+
 //					tabs[tabId] = new Tab(tabId);
 //				}
-//			});
+			});
 //
 //			chrome.tabs.onRemoved.addListener(function(tabId, changeInfo, tab) {
 //				if (tabs[tabId])
@@ -55,10 +53,11 @@
 
 			chrome.extension.onConnect.addListener(function(port) {
 				console.assert(port.name == "kfw");
-				console.log("Connecting to page!");
+				log("Connecting to page!");
 
 				port.onMessage.addListener(function(msg) {
-					if ('scan' in msg) {
+					if ('scan' in msg)
+					{
 						var img = msg.scan;
 						
 						console.log("Checking " + img.src);
@@ -71,61 +70,46 @@
 							document.body.appendChild(nimg);
 							log(nimg);
 
-							var result = cs.scanImage(nimg);
-							port.postMessage({scan_result: {id: img.id,  result: result}});
+							var result = false;
+							try
+							{
+								result = scanner.scanImage(nimg);
+							}
+							catch (e)
+							{
+								log("Scan failed " + e);
+							}
+							
+							var params = {scan_result: {id: img.id,  result: result}};
+							// If it's 'nude', pass back a kitty picture to use.
+							if (result)
+							{
+								log("OMG a nude!!");
+								params.scan_result.src = flickr.nextPhoto();
+							}
+
+							port.postMessage(params);
 
 							document.body.removeChild(nimg);
 							delete nimg;
 						}
-//						$.ajax(
-//							'http://img-to-json.appspot.com/',
-//							{
-//								timeout: 10000,
-//								data: {url: img.src},
-//								dataType: 'json',
-//								// Remove the '(' and ')' from the JSONP request
-//								dataFilter: function(data, type) {
-//									return data.substring(1, data.length-2);
-//								},
-//								error: function(jqXHR, textStatus, errorThrown) {
-//									console.log('ERROR: ' + textStatus);
-//									console.log(errorThrown);
-//								},
-//								success: function(data) {
-//									console.log("Cross-domain success for " + img.src);
-//									if (data.data)
-//									{
-//										console.log("Data exists too, yay");
-//										var result = false;
-//										var nimg = new Image();
-//										nimg.src = data.src;
-//										//nimg.onload = function() {
-//										//console.log("Image finished loading.");
-//										nimg.width = img.width;
-//										nimg.height = img.height;
-//
-//										result = cs.scanImage(nimg);
-//										console.log("Result is " + result);
-//										port.postMessage({scan_result: {id: img.id,  result: result}});
-//										//};
-//
-//									}
-//								}
-//							}
-//						);
+					}
+					else if ('require_kitty' in msg)
+					{
+						port.postMessage({kitty: flickr.nextPhoto(), id: msg.require_kitty});
 					}
 				});
 			});
 
 			chrome.pageAction.onClicked.addListener(function(tab) {
-				if (!tabs[tab.id].enabled)
-				{
-					tabs[tab.id].enable();
-				}
-				else
-				{
-					tabs[tab.id].disable();
-				}
+//				if (!tabs[tab.id].enabled)
+//				{
+//					tabs[tab.id].enable();
+//				}
+//				else
+//				{
+//					tabs[tab.id].disable();
+//				}
 			});
 		</script>
 	</head>
