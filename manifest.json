@@ -6,8 +6,8 @@
 	"default_locale": "en",
 	"icons": {
 		"16": "images/16x16.png",
-		"48": "images/48x48.jpg",
-		"128": "images/128x128.jpg"
+		"48": "images/48x48.png",
+		"128": "images/128x128.png"
 	},
 
 	"background_page": "background.html",
@@ -25,7 +25,7 @@
 
 	"options_page": "options.html",
 	"permissions": [
-		"tabs", "http://ajax.googleapis.com/", "http://ajax.microsoft.com/", "http://api.flickr.com",
+		"tabs", "notifications",
 		"http://*/*", "https://*/*"
 	]
 }

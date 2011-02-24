@@ -2,7 +2,7 @@
 var ContentScript = Class.extend({
 	init: function()
 	{
-		this.scanner = new Scanner();
+		this.scanner = new Scanner(3);
 
 		this.injectCSS();
 		this.connectToBackground();
@@ -26,6 +26,15 @@ var ContentScript = Class.extend({
 
 	connectToBackground: function()
 	{
+		chrome.extension.onRequest.addListener(function(request, sender, callback) {
+			if ('options' in request) {
+				log("Setting strength to " + request.options.strength);
+				this.scanner.nudejs.setStrength(request.options.strength);
+			}
+
+			callback({});
+		}.bind(this));
+
 		this.port = chrome.extension.connect({name: "kfw"});
 		this.port.onMessage.addListener(function(msg) {
 			if ('scan_result' in msg) {
@@ -45,6 +54,10 @@ var ContentScript = Class.extend({
 				log("Found kitty for " + msg.id);
 				var img = document.getElementById(msg.id);
 				this.replaceImage(img, msg.kitty);
+			}
+			else if ('strength' in msg) {
+				log("Setting strength to " + request.options.strength);
+				this.scanner.nudejs.setStrength(msg.strength);
 			}
 		}.bind(this));
 	},
@@ -88,7 +101,9 @@ var ContentScript = Class.extend({
 			el.setAttribute('scanned', 'true');
 			//el.parentNode.insertBefore(img, el);
 			el.parentNode.replaceChild(img, el);
-		}
+
+			this.port.postMessage({increment: true});
+		}.bind(this);
 	},
 
 	makeVisible: function(img)

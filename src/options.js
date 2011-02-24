@@ -1,5 +1,11 @@
 
 var Options = Class.extend({
+
+	init: function()
+	{
+		
+	},
+
 	saveParam: function(key, value)
 	{
 		if (value == undefined) return;
@@ -12,28 +18,22 @@ var Options = Class.extend({
 		return (key in localStorage) ? localStorage[key] : def;
 	},
 
-	save: function(mode)
+	save: function(params)
 	{
-		localStorage.mode = mode || 'w';
-		this.load();
+		for (var name in params)
+		{
+			this.saveParam(name, params[name]);
+		}
 	},
 
-	mode: function(mode)
+	strength: function()
 	{
-		this.saveParam('mode', mode);
-		return this.getParam('mode', 'w');
+		return this.getParam('strength', 3);
 	},
 
-	whitelist: function(whitelist)
+	nudeJSStrength: function()
 	{
-		this.saveParam('whitelist', whitelist);
-		return this.getParam('whitelist', ['formspring']);
-	},
-
-	blacklist: function(blacklist)
-	{
-		this.saveParam('blacklist', blacklist);
-		return this.getParam('blacklist', []);
+		return this.strengths[this.strength()];
 	},
 
 	checkUrl: function(url)

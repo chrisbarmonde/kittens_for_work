@@ -5,7 +5,7 @@
 		<script src="src/util.js" type="text/javascript"></script>
 
 		<script src="src/options.js" type="text/javascript"></script>
-		<script src="src/tab.js" type="text/javascript"></script>
+		<script src="src/notifications.js" type="text/javascript"></script>
 
 		<script src="src/jquery.min.js" type="text/javascript"></script>
 		<script src="src/nudejs/worker.nude.js" type="text/javascript"></script>
@@ -14,9 +14,9 @@
 
 		<script type="text/javascript">
 			
-			var tabs = {},
+			var notifications = new Notifications(),
 				options = new Options(),
-				scanner = new Scanner(),
+				scanner = new Scanner(options.strength()),
 				flickr = new Flickr();
 
 			flickr.getPhotos();
@@ -26,6 +26,15 @@
 				scanner.injectCanvas()
 			});
 
+
+			chrome.extension.onRequest.addListener(function(request, sender, callback) {
+				if ('options' in request) {
+					log("Setting strength to " + request.options.strength);
+					scanner.nudejs.setStrength(request.options.strength);
+				}
+
+				callback({});
+			});
 
 			chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 				chrome.pageAction.show(tabId);
@@ -54,7 +63,7 @@
 			chrome.extension.onConnect.addListener(function(port) {
 				console.assert(port.name == "kfw");
 				log("Connecting to page!");
-
+				port.postMessage({strength: options.strength()});
 				port.onMessage.addListener(function(msg) {
 					if ('scan' in msg)
 					{
@@ -98,18 +107,14 @@
 					{
 						port.postMessage({kitty: flickr.nextPhoto(), id: msg.require_kitty});
 					}
+					else if ('increment' in msg)
+					{
+						notifications.increment();
+					}
 				});
 			});
 
 			chrome.pageAction.onClicked.addListener(function(tab) {
-//				if (!tabs[tab.id].enabled)
-//				{
-//					tabs[tab.id].enable();
-//				}
-//				else
-//				{
-//					tabs[tab.id].disable();
-//				}
 			});
 		</script>
 	</head>

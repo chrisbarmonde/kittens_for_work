@@ -6,6 +6,96 @@ Array.prototype.remove = function (a)
 };
 
 var NudeChecker = Class.extend({
+	init: function(strength) {
+		this.strength = strength;
+		this.strengths = {
+			0: {
+				total_regions: 0,
+				total_pixels: 0,
+				combined: {
+					first: 0,
+					second: 0,
+					third: 0
+				},
+				largest_region: 0,
+				max_regions: 0
+			},
+			1: {
+				total_regions: 5,
+				total_pixels: 25,
+				combined: {
+					first: 60,
+					second: 50,
+					third: 50
+				},
+				largest_region: 75,
+				max_regions: 20
+			},
+			2: {
+				total_regions: 4,
+				total_pixels: 20,
+				combined: {
+					first: 48,
+					second: 40,
+					third: 40
+				},
+				largest_region: 60,
+				max_regions: 40
+			},
+			3: {
+				total_regions: 3,
+				total_pixels: 15,
+				combined: {
+					first: 35,
+					second: 30,
+					third: 30
+				},
+				largest_region: 45,
+				max_regions: 60
+			},
+			4: {
+				total_regions: 2,
+				total_pixels: 10,
+				combined: {
+					first: 24,
+					second: 20,
+					third: 20
+				},
+				largest_region: 30,
+				max_regions: 80
+			},
+			5: {
+				total_regions: 1,
+				total_pixels: 5,
+				combined: {
+					first: 12,
+					second: 10,
+					third: 10
+				},
+				largest_region: 15,
+				max_regions: 100
+			},
+			6: {
+				total_regions: 0,
+				total_pixels: 0,
+				combined: {
+					first: 0,
+					second: 0,
+					third: 0
+				},
+				largest_region: 0,
+				max_regions: 0
+			}
+		};
+
+		this.setStrength(this.strength);
+	},
+
+	setStrength: function(strength) {
+		this.strength = strength;
+		this.opts = this.strengths[strength];
+	},
+
 	reset: function() {
 		this.skinRegions = [];
 		this.skinMap = [];
@@ -19,6 +109,10 @@ var NudeChecker = Class.extend({
 	scanImage: function(imageData, width, height) {
 
 		this.reset();
+
+		// 0 = Disabled / 6 = Enabled
+		if (this.strength == 0) return false;
+		if (this.strength == 6) return true;
 
 		var length = imageData.length;
 
@@ -163,14 +257,14 @@ var NudeChecker = Class.extend({
 		}
 	},
 	analyseRegions: function(width, height) {
-
+		
 		// sort the detected regions by size
 		var length = this.skinRegions.length,
 		totalPixels = width * height,
 		totalSkin = 0;
 
 		// if there are less than 3 regions
-		if(length < 3){
+		if(length < this.opts.total_regions){
 			console.log("Not nude: less than 3 regions (" + length + ")");
 			return false;
 		}
@@ -197,7 +291,7 @@ var NudeChecker = Class.extend({
 		}
 
 		// check if there are more than 15% skin pixel in the image
-		if((totalSkin/totalPixels)*100 < 15){
+		if((totalSkin/totalPixels)*100 < this.opts.total_pixels){
 			// if the percentage lower than 15, it's not nude!
 			console.log("it's not nude :) - total skin percent is "+((totalSkin/totalPixels)*100)+"% ");
 			return false;
@@ -207,9 +301,9 @@ var NudeChecker = Class.extend({
 		// check if the largest skin region is less than 35% of the total skin count
 		// AND if the second largest region is less than 30% of the total skin count
 		// AND if the third largest region is less than 30% of the total skin count
-		if((this.skinRegions[0].length/totalSkin)*100 < 35
-				&& (this.skinRegions[1].length/totalSkin)*100 < 30
-				&& (this.skinRegions[2].length/totalSkin)*100 < 30){
+		if((this.skinRegions[0].length/totalSkin)*100 < this.opts.combined.first
+				&& (this.skinRegions[1].length/totalSkin)*100 < this.opts.combined.second
+				&& (this.skinRegions[2].length/totalSkin)*100 < this.opts.combined.third){
 			// the image is not nude.
 			console.log("it's not nude :) - less than 35%,30%,30% skin in the biggest areas :" + ((this.skinRegions[0].length/totalSkin)*100) + "%, " + ((this.skinRegions[1].length/totalSkin)*100)+"%, "+((this.skinRegions[2].length/totalSkin)*100)+"%");
 			return false;
@@ -217,7 +311,7 @@ var NudeChecker = Class.extend({
 		}
 
 		// check if the number of skin pixels in the largest region is less than 45% of the total skin count
-		if((this.skinRegions[0].length/totalSkin)*100 < 45){
+		if((this.skinRegions[0].length/totalSkin)*100 < this.opts.largest_region){
 			// it's not nude
 			console.log("it's not nude :) - the biggest region contains less than 45%: "+((this.skinRegions[0].length/totalSkin)*100)+"%");
 			return false;
@@ -236,7 +330,7 @@ var NudeChecker = Class.extend({
 		// TODO: include bounding polygon functionality
 		// if there are more than 60 skin regions and the average intensity within the polygon is less than 0.25
 		// the image is not nude
-		if(this.skinRegions.length > 60){
+		if(this.skinRegions.length > this.opts.max_regions){
 			console.log("it's not nude :) - more than 60 skin regions");
 			return false;
 		}

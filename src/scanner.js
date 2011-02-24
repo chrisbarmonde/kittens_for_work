@@ -1,9 +1,10 @@
 
 var Scanner = Class.extend({
 
-	init: function()
+	init: function(nj_strength)
 	{
-		this.nudejs = new NudeChecker();
+		log("Setting NJ Strength to " + nj_strength);
+		this.nudejs = new NudeChecker(nj_strength);
 		this.canvas = null;
 	},
 

@@ -26,6 +26,8 @@ var Flickr = Class.extend({
 		this.photos = [];
 		this.current_photo = 0;
 
+		log('Reloading Flickr photos...');
+
 		// http://www.flickr.com/services/api/flickr.photos.search.html
 		$.ajax('http://api.flickr.com/services/rest/', {
 			data: {
@@ -44,7 +46,6 @@ var Flickr = Class.extend({
 				for (var i = 0; i < photos.length; i++) {
 					this.photos.push(this.getPhotoURL(photos[i]));
 				}
-				log(this.photos);
 			}.bind(this),
 			error: function(xhr, text, error) {
 				log('FLICKR ERROR: ' + text);
