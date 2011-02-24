@@ -10,6 +10,19 @@ Function.prototype.bind = function (a)
 	}
 };
 
+Array.prototype.find = function(value)
+{
+    for (var i = 0; i < this.length; i++)
+    {
+        if (this[i] === value)
+        {
+            return i;
+        }
+    }
+
+    return false;
+}
+
 function log(msg)
 {
 	console.log(msg);

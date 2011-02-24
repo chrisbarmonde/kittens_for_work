@@ -14,8 +14,8 @@
 
 		<script type="text/javascript">
 			
-			var notifications = new Notifications(),
-				options = new Options(),
+			var options = new Options(),
+				notifications = new Notifications(options.images_blocked()),
 				scanner = new Scanner(options.strength()),
 				flickr = new Flickr();
 
@@ -110,6 +110,7 @@
 					else if ('increment' in msg)
 					{
 						notifications.increment();
+						options.setParam('images_blocked', notifications.images_blocked);
 					}
 				});
 			});

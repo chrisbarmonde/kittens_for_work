@@ -1,12 +1,7 @@
 
 var Options = Class.extend({
 
-	init: function()
-	{
-		
-	},
-
-	saveParam: function(key, value)
+	setParam: function(key, value)
 	{
 		if (value == undefined) return;
 		localStorage[key] = value;
@@ -22,7 +17,7 @@ var Options = Class.extend({
 	{
 		for (var name in params)
 		{
-			this.saveParam(name, params[name]);
+			this.seParam(name, params[name]);
 		}
 	},
 
@@ -31,9 +26,9 @@ var Options = Class.extend({
 		return this.getParam('strength', 3);
 	},
 
-	nudeJSStrength: function()
+	images_blocked: function()
 	{
-		return this.strengths[this.strength()];
+		return this.getParam('images_blocked', 0);
 	},
 
 	checkUrl: function(url)

@@ -13,6 +13,7 @@ var ContentScript = Class.extend({
 
 		// Image counter to give each image a unique id, if necessary
 		this.imgid = 0;
+		this.scanning = [];
 	},
 
 	injectCSS: function()
@@ -56,7 +57,7 @@ var ContentScript = Class.extend({
 				this.replaceImage(img, msg.kitty);
 			}
 			else if ('strength' in msg) {
-				log("Setting strength to " + request.options.strength);
+				log("Setting strength to " + msg.strength);
 				this.scanner.nudejs.setStrength(msg.strength);
 			}
 		}.bind(this));
@@ -102,6 +103,8 @@ var ContentScript = Class.extend({
 			//el.parentNode.insertBefore(img, el);
 			el.parentNode.replaceChild(img, el);
 
+			this.removeFromScanning(el);
+
 			this.port.postMessage({increment: true});
 		}.bind(this);
 	},
@@ -110,12 +113,27 @@ var ContentScript = Class.extend({
 	{
 		img.setAttribute('scanned', 'true');
 		img.style.setProperty('visibility', 'visible', 'important');
+		this.removeFromScanning(img);
 	},
 
-	findAllImages: function() {
+	removeFromScanning: function(img)
+	{
+		var index = this.scanning.find(img);
+		if (index !== false)
+		{
+			this.scanning.remove(index);
+		}
+	},
+
+	findAllImages: function()
+	{
 		var els = document.querySelectorAll('img:not([scanned])');
-		for (var i = 0; i < els.length; i++) {
-			this.checkImage(els[i]);
+		for (var i = 0; i < els.length; i++)
+		{
+            if (this.scanning.find(els[i]) === false)
+			{
+				this.checkImage(els[i]);
+			}
 		}
 	},
 

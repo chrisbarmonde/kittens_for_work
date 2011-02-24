@@ -1,8 +1,8 @@
 
 var Notifications = Class.extend({
-	init: function()
+	init: function(images_blocked)
 	{
-		this.images_blocked = 0;
+		this.images_blocked = images_blocked || 0;
 		this.thresholds = [5, 25, 50, 100, 250, 500, 1000];
 		this.step = 1000;
 	},
