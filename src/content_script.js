@@ -130,7 +130,7 @@ var ContentScript = Class.extend({
 		var els = document.querySelectorAll('img:not([scanned])');
 		for (var i = 0; i < els.length; i++)
 		{
-            if (this.scanning.find(els[i]) === false)
+			if (this.scanning.find(els[i]) === false)
 			{
 				this.checkImage(els[i]);
 			}

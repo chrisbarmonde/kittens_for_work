@@ -17,7 +17,7 @@ var Options = Class.extend({
 	{
 		for (var name in params)
 		{
-			this.seParam(name, params[name]);
+			this.setParam(name, params[name]);
 		}
 	},
 
